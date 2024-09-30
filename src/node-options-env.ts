@@ -4,6 +4,7 @@ import {
   importMatch,
   legacyLoader,
   legacyMatch,
+  requireMatch,
 } from './loader-paths.js'
 import { nodeOptionsToArgv } from './node-options-to-argv.js'
 
@@ -38,7 +39,11 @@ const hasLoader = (args: readonly string[]): boolean => {
     /* c8 ignore start */
     if (typeof arg !== 'string') throw new Error('invalid arg')
     /* c8 ignore stop */
-    if (!arg.startsWith('--') || arg === '--') break
+
+    if (arg === '--') break
+    if (!arg.startsWith('--') && arg !== '-r') break
+    if (arg === '--enable-source-maps') continue
+
     const [eq, k, v] = getKeyValue(args, i)
     if (!v) {
       // wasn't a key-value pair
@@ -51,13 +56,24 @@ const hasLoader = (args: readonly string[]): boolean => {
     ) {
       return true
     }
-    if (k === '--import' && importMatch(v)) return true
+    if (
+      (k === '--import') &&
+      importMatch(v)
+    ) {
+      return true
+    }
+    if (
+      (k === '-r' || k === '--require') &&
+      requireMatch(v)
+    ) {
+      return true
+    }
   }
   return false
 }
 
 const rmLoader = (args: string[]) => {
-  const doNotWantKeys = ['--experimental-loader', '--loader', '--import']
+  const doNotWantKeys = ['--experimental-loader', '--loader', '--import', '-r', '--require']
 
   const result: string[] = []
 
@@ -67,7 +83,7 @@ const rmLoader = (args: string[]) => {
     /* c8 ignore start */
     if (typeof arg !== 'string') throw new Error('invalid arg')
     /* c8 ignore stop */
-    if (!arg.startsWith('--') || doubledash) {
+    if (!arg.startsWith('--') && arg !== '-r' || doubledash) {
       result.push(arg)
       continue
     }
@@ -84,7 +100,7 @@ const rmLoader = (args: string[]) => {
       continue
     }
     if (!eq) i++
-    if (doNotWantKeys.includes(k) && (importMatch(v) || legacyMatch(v))) {
+    if (doNotWantKeys.includes(k) && (importMatch(v) || legacyMatch(v) || requireMatch(v))) {
       // it's ours, remove it
       continue
     }
@@ -158,7 +174,7 @@ const addLoader = (args: string[]) => {
 
 const addIgnoreLoadersWarning = (args: readonly string[]) =>
   args.includes('--no-warnings') ||
-  args.includes('--no-warnings=ExperimentalLoader')
+    args.includes('--no-warnings=ExperimentalLoader')
     ? args
     : args.concat('--no-warnings')
 
