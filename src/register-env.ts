@@ -22,9 +22,15 @@ const getEnvs = (env?: NodeJS.ProcessEnv, args: readonly string[] = []) => {
 
 export const register = () => {
   processOnSpawn.addListener(obj => {
+    // in Electron first arg can be `execPath`
+    const args = obj.args.slice();
+    if (args[0] === obj.execPath) {
+      args.shift();
+    }
+
     obj.env = {
       ...(obj.env || p.env),
-      ...getEnvs(obj.env, obj.args),
+      ...getEnvs(obj.env, args),
     }
     return obj
   })
