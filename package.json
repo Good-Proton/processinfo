@@ -13,7 +13,8 @@
     "exports": {
       ".": "./src/index.ts",
       "./loader": "./src/loader-legacy.mts",
-      "./import": "./src/import.mts"
+      "./import": "./src/import.mts",
+      "./register": "./src/register.cts"
     }
   },
   "exports": {
@@ -37,6 +38,12 @@
       "import": {
         "types": "./dist/esm/import.d.mts",
         "default": "./dist/esm/import.mjs"
+      }
+    },
+    "./register": {
+      "require": {
+        "types": "./dist/commonjs/register.d.cts",
+        "default": "./dist/commonjs/register.cjs"
       }
     }
   },
